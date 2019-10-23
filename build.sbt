@@ -11,17 +11,17 @@ crossScalaVersions := Seq(
   "2.11.12"
 )
 
-unmanagedSourceDirectories in Compile += (sourceDirectory in Compile).value / (
+unmanagedSourceDirectories in Compile ++= (
   CrossVersion.partialVersion(scalaVersion.value) match {
-    case Some((2, 13)) => "scala-2.13"
-    case Some((2, 11 | 12)) => "scala-2.1x"
-  })
+    case Some((2, 13)) => Seq()
+    case Some((2, 11 | 12)) => Seq("scala-2.1x")
+  }).map(subDir => (sourceDirectory in Compile).value / subDir)
 
-unmanagedSourceDirectories in Test += (sourceDirectory in Test).value / (
+unmanagedSourceDirectories in Test ++= (
   CrossVersion.partialVersion(scalaVersion.value) match {
-    case Some((2, 13)) => "scala-2.13"
-    case Some((2, 11 | 12)) => "scala-2.1x"
-  })
+    case Some((2, 13)) => Seq()
+    case Some((2, 11 | 12)) => Seq("scala-2.1x")
+  }).map(subDir => (sourceDirectory in Test).value / subDir)
 
 def fastParseVersion(scalaVersion: String): String =
   CrossVersion.partialVersion(scalaVersion) match {
