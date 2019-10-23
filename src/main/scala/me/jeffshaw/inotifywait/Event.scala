@@ -1,6 +1,7 @@
 package me.jeffshaw.inotifywait
 
-import fastparse.core.Parsed.{Failure, Success}
+import fastparse.Parsed.{Failure, Success}
+import fastparse.parse
 
 case class Event(
   watchedFile: String,
@@ -12,39 +13,39 @@ object Event {
   val lineMatcher = "(\")?[^\"]+\\g{1},{2}(\")?[^\"]+\\g{1}"
 
   def valueOf(line: String): Event = {
-    Csv.csv.parse(line) match {
+    parse(line, Csv.csv(_)) match {
       case Success(Seq(watchedFile, eventStrings, eventFile), _) =>
-        val events = eventStrings.split(",").map(Event.Type.valueOf).toSet
+        val events = {
+          for (name <- eventStrings.split(",")) yield {
+            Event.Type.byName.getOrElse(name, throw new IllegalArgumentException("unknown event type " + name))
+          }
+        }.toSet
         Event(watchedFile, events, eventFile)
-      case f: Failure[_, _] =>
+      case f: Failure =>
         throw new RuntimeException("event parsing failed for " + line + " at index " + f.index)
     }
-
   }
 
   sealed abstract class Type(val name: String)
 
   object Type {
-    def valueOf(asString: String): Type = {
-      asString match {
-        case ACCESS.name => ACCESS
-        case MODIFY.name => MODIFY
-        case ATTRIB.name => ATTRIB
-        case CLOSE_WRITE.name => CLOSE_WRITE
-        case CLOSE_NOWRITE.name => CLOSE_NOWRITE
-        case CLOSE.name => CLOSE
-        case OPEN.name => OPEN
-        case MOVED_TO.name => MOVED_TO
-        case MOVED_FROM.name => MOVED_FROM
-        case MOVE.name => MOVE
-        case CREATE.name => CREATE
-        case DELETE.name => DELETE
-        case DELETE_SELF.name => DELETE_SELF
-        case UNMOUNT.name => UNMOUNT
-        case _ =>
-          throw new IllegalArgumentException("unknown event type " + asString)
-      }
-    }
+    val byName: Map[String, Type] =
+      Map(
+        ACCESS.name -> ACCESS,
+        MODIFY.name -> MODIFY,
+        ATTRIB.name -> ATTRIB,
+        CLOSE_WRITE.name -> CLOSE_WRITE,
+        CLOSE_NOWRITE.name -> CLOSE_NOWRITE,
+        CLOSE.name -> CLOSE,
+        OPEN.name -> OPEN,
+        MOVED_TO.name -> MOVED_TO,
+        MOVED_FROM.name -> MOVED_FROM,
+        MOVE.name -> MOVE,
+        CREATE.name -> CREATE,
+        DELETE.name -> DELETE,
+        DELETE_SELF.name -> DELETE_SELF,
+        UNMOUNT.name -> UNMOUNT
+      )
 
     case object ACCESS extends Type("ACCESS")
     case object MODIFY extends Type("MODIFY")
@@ -61,5 +62,4 @@ object Event {
     case object DELETE_SELF extends Type("DELETE_SELF")
     case object UNMOUNT extends Type("UNMOUNT")
   }
-
 }

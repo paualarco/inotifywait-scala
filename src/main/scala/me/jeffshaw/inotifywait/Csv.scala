@@ -1,23 +1,26 @@
 package me.jeffshaw.inotifywait
 
-import fastparse.all._
+import fastparse._
+import fastparse.NoWhitespace._
 
 /**
   * Parser for lines given by inotifywait.
   */
 object Csv {
 
-  val quotedFieldValue: P[String] = P {
-    "\"" ~ "\"".! |
+  def quotedFieldValue[_: P]: P[String] = P {
+    ("\"" ~ "\"".! |
       !"\"" ~ AnyChar.!
-  }.rep.map(_.mkString)
-
-  val quotedField: P[String] = P {
-    "\"" ~/ quotedFieldValue ~ "\""
+    ).rep.map(_.mkString)
   }
 
-  val field: P[String] = P((!CharIn(Seq('"', ',')) ~ AnyChar.!).rep).map(_.mkString)
+  def quotedField[_: P]: P[String] = P("\"" ~/ quotedFieldValue ~ "\"")
 
-  val csv = P(Start ~ (quotedField | field).rep(sep = P(",")) ~ End)
+  // for unit testing
+  private[inotifywait] def onlyQuotedField[_: P]: P[String] = P(quotedField ~ End)
+
+  def field[_: P]: P[String] = P((!CharIn("\",") ~ AnyChar.!).rep).map(_.mkString)
+
+  def csv[_: P]: P[Seq[String]] = P(Start ~ (quotedField | field).rep(sep = P(",")) ~ End)
 
 }
