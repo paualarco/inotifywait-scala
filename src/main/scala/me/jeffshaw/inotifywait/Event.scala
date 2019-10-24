@@ -17,7 +17,7 @@ object Event {
       case Success(Seq(watchedFile, eventStrings, eventFile), _) =>
         val events = {
           for (name <- eventStrings.split(",")) yield {
-            Event.Type.byName.getOrElse(name, throw new IllegalArgumentException("unknown event type " + name))
+            Type.byName.getOrElse(name, throw new IllegalArgumentException("unknown event type " + name))
           }
         }.toSet
         Event(events, Paths.get(watchedFile, eventFile))
