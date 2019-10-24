@@ -13,29 +13,25 @@ class InotifyWaitSpec extends FunSuite with BeforeAndAfterAll {
     val testDir = suiteDir.resolve("createProcess")
     Files.createDirectories(testDir)
     val tempFile = testDir.resolve("file")
-    val builder = InotifyWait.createProcess(testDir.toString, false, Set())
-
-
-    val process = builder.start()
-    val eventStreamThunk = InotifyWait.getEvents(process)
+    val process = InotifyWait.start(testDir, false, Set())
 
     // create some events
     Files.createFile(tempFile)
     Files.delete(tempFile)
 
-    val events = eventStreamThunk().take(4).toVector
+    val events = process.events.take(4).toVector
 
     val expected =
       Vector(
-        Event(testDir.toString + "/", Set(Event.Type.CREATE), "file"),
-        Event(testDir.toString + "/", Set(Event.Type.OPEN), "file"),
-        Event(testDir.toString + "/", Set(Event.Type.CLOSE_WRITE, Event.Type.CLOSE), "file"),
-        Event(testDir.toString + "/", Set(Event.Type.DELETE), "file")
+        Event(Set(Event.Type.CREATE), tempFile),
+        Event(Set(Event.Type.OPEN), tempFile),
+        Event(Set(Event.Type.CLOSE_WRITE, Event.Type.CLOSE), tempFile),
+        Event(Set(Event.Type.DELETE), tempFile)
       )
 
     assertResult(expected)(events)
-    process.destroy()
-    process.waitFor()
+    process.process.destroy()
+    process.process.waitFor()
   }
 
   override protected def afterAll(): Unit = {
