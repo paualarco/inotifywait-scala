@@ -8,7 +8,7 @@ class InotifyWait private (
   val recursive: Boolean,
   val subscriptions: Set[Subscription],
   val process: Process,
-  val events: Iterator[Event]
+  val events: Iterator[Events]
 ) {
   def startDuplicate(
     path: Path = path,
@@ -47,7 +47,7 @@ object InotifyWait {
   ): InotifyWait = {
     val process = new ProcessBuilder(command(path, recursive, subscriptions): _*).start()
     val in = io.Source.fromInputStream(process.getInputStream)
-    val events = in.getLines().map(Event.valueOf)
+    val events = in.getLines().map(Events.valueOf)
     new InotifyWait(path, recursive, subscriptions, process, events)
   }
 

@@ -23,10 +23,10 @@ class InotifyWaitSpec extends FunSuite with BeforeAndAfterAll {
 
     val expected =
       Vector(
-        Event(Set(Event.Type.CREATE), tempFile),
-        Event(Set(Event.Type.OPEN), tempFile),
-        Event(Set(Event.Type.CLOSE_WRITE, Event.Type.CLOSE), tempFile),
-        Event(Set(Event.Type.DELETE), tempFile)
+        Events(Set(Event.CREATE), tempFile),
+        Events(Set(Event.OPEN), tempFile),
+        Events(Set(Event.CLOSE_WRITE, Event.CLOSE), tempFile),
+        Events(Set(Event.DELETE), tempFile)
       )
 
     assertResult(expected)(events)
