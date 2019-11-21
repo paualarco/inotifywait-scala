@@ -12,7 +12,8 @@ crossScalaVersions := Seq(
 )
 
 libraryDependencies ++= Seq(
-  "io.monix" %% "monix" % "3.1.0"
+  "io.monix" %% "monix" % "3.1.0",
+  "org.scalatest" %% "scalatest" % "3.0.8" % Test
 )
 
 licenses += ("Apache", url("https://www.apache.org/licenses/LICENSE-2.0"))

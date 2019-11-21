@@ -16,18 +16,9 @@ class InotifyWaitSpec extends FunSuite with BeforeAndAfterAll {
     val process = InotifyWait.start(testDir, false, Set())
 
     // create some events
-    Files.createFile(tempFile)
-    Files.delete(tempFile)
+    val expected = InotifyWaitSpec.createEvents(tempFile)
 
     val events = process.events.take(4).toVector
-
-    val expected =
-      Vector(
-        Events(Set(Event.CREATE), tempFile),
-        Events(Set(Event.OPEN), tempFile),
-        Events(Set(Event.CLOSE_WRITE, Event.CLOSE), tempFile),
-        Events(Set(Event.DELETE), tempFile)
-      )
 
     assertResult(expected)(events)
     process.process.destroy()
@@ -35,8 +26,15 @@ class InotifyWaitSpec extends FunSuite with BeforeAndAfterAll {
   }
 
   override protected def afterAll(): Unit = {
+    InotifyWaitSpec.clean(suiteDir)
+  }
+
+}
+
+object InotifyWaitSpec {
+  def clean(path: Path): Unit = {
     Files.walkFileTree(
-      suiteDir,
+      path,
       new SimpleFileVisitor[Path]() {
         override def visitFile(file: Path, attrs: BasicFileAttributes): FileVisitResult = {
           Files.delete(file)
@@ -51,4 +49,20 @@ class InotifyWaitSpec extends FunSuite with BeforeAndAfterAll {
     )
   }
 
+  /**
+    * Create and delete the given file.
+    * @param path
+    * @return the expected events
+    */
+  def createEvents(path: Path): Vector[Events] = {
+    Files.createFile(path)
+    Files.delete(path)
+
+    Vector(
+      Events(Set(Event.CREATE), path),
+      Events(Set(Event.OPEN), path),
+      Events(Set(Event.CLOSE_WRITE, Event.CLOSE), path),
+      Events(Set(Event.DELETE), path)
+    )
+  }
 }
