@@ -4,7 +4,7 @@ import java.nio.file.Files
 import org.scalatest.{BeforeAndAfterAll, FunSuite}
 import monix.execution.Scheduler.Implicits.global
 import scala.concurrent.Await
-import scala.concurrent.duration.Duration
+import scala.concurrent.duration._
 
 class InotifyWaitObservableSpec extends FunSuite with BeforeAndAfterAll {
 
@@ -15,7 +15,7 @@ class InotifyWaitObservableSpec extends FunSuite with BeforeAndAfterAll {
     Files.createDirectories(testDir)
     val tempFile = testDir.resolve("file")
 
-    val resultF = InotifyWaitObservable.start(testDir, false, Set()).take(4).toListL.runToFuture
+    val resultF = InotifyWaitObservable(testDir, false, Set()).take(4).toListL.runToFuture
 
     val expectedEvents = InotifyWaitSpec.createEvents(tempFile)
 
