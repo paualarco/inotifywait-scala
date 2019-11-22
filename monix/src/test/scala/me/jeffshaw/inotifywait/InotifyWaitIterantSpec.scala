@@ -2,12 +2,10 @@ package me.jeffshaw.inotifywait
 
 import java.nio.file.Files
 import cats.effect.IO
-import org.scalatest.{BeforeAndAfterAll, FunSuite}
-import scala.concurrent.ExecutionContext.Implicits.global
-import scala.concurrent.duration._
-import scala.concurrent.{Await, Future, Promise}
+import org.scalatest.{BeforeAndAfterAll, AsyncFunSuite}
+import scala.concurrent.Future
 
-class InotifyWaitIterantSpec extends FunSuite with BeforeAndAfterAll {
+class InotifyWaitIterantSpec extends AsyncFunSuite with BeforeAndAfterAll {
 
   val suiteDir = Files.createTempDirectory("InotifyWaitIterantSpec")
 
@@ -16,20 +14,16 @@ class InotifyWaitIterantSpec extends FunSuite with BeforeAndAfterAll {
     Files.createDirectories(testDir)
     val tempFile = testDir.resolve("file")
 
-    val p = Promise[List[Events]]()
-
-    Future(
-      InotifyWaitIterant[IO](testDir, false, Set()).take(1).toListL.unsafeRunAsync {
-        case Left(failure) => p.failure(failure)
-        case Right(result) => p.success(result)
-      }
-    )
+    val resultF =
+      Future(
+        InotifyWaitIterant[IO](testDir, false, Set()).take(4).toListL.unsafeRunSync()
+      )
 
     val expectedEvents = InotifyWaitSpec.createEvents(tempFile)
 
-    val result = Await.result(p.future, Duration.Inf)
-
-    assertResult(expectedEvents)(result)
+    for (result <- resultF) yield {
+      assertResult(expectedEvents)(result)
+    }
   }
 
   override protected def afterAll(): Unit = {

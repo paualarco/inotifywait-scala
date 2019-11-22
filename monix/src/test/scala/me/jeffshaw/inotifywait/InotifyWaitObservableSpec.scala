@@ -1,12 +1,10 @@
 package me.jeffshaw.inotifywait
 
 import java.nio.file.Files
-import org.scalatest.{BeforeAndAfterAll, FunSuite}
+import org.scalatest.{BeforeAndAfterAll, AsyncFunSuite}
 import monix.execution.Scheduler.Implicits.global
-import scala.concurrent.Await
-import scala.concurrent.duration._
 
-class InotifyWaitObservableSpec extends FunSuite with BeforeAndAfterAll {
+class InotifyWaitObservableSpec extends AsyncFunSuite with BeforeAndAfterAll {
 
   val suiteDir = Files.createTempDirectory("InotifyWaitObservableSpec")
 
@@ -19,9 +17,9 @@ class InotifyWaitObservableSpec extends FunSuite with BeforeAndAfterAll {
 
     val expectedEvents = InotifyWaitSpec.createEvents(tempFile)
 
-    val result = Await.result(resultF, Duration.Inf)
-
-    assertResult(expectedEvents)(result)
+    for (result <- resultF) yield {
+      assertResult(expectedEvents)(result)
+    }
   }
 
   override protected def afterAll(): Unit = {
