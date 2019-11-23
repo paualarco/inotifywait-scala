@@ -30,5 +30,6 @@ class CsvSpec extends FunSuite {
   testParser("csv4", """hi,"there",",","you""are"""", Csv.csv(_), assertResult(Parsed.Success(Seq("hi", "there", ",", "you\"are"), 25)))
   testParser("csv5", """hi,"there",",","you""are",good""", Csv.csv(_), assertResult(Parsed.Success(Seq("hi", "there", ",", "you\"are", "good"), 30)))
   testParser("./,\"CLOSE_WRITE,CLOSE\",\"\"\"hi\"", "./,\"CLOSE_WRITE,CLOSE\",\"\"\"hi\"", Csv.csv(_), assertResult(Parsed.Success(Seq("./", "CLOSE_WRITE,CLOSE", "\"hi"), 29)))
+  testParser("watching directory", "/,IS_DIR,", Csv.csv(_), assertResult(Parsed.Success(Seq("/", "ISDIR", ""), 9)))
 
 }

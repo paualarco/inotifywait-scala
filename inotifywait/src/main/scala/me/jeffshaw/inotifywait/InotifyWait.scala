@@ -36,6 +36,7 @@ object InotifyWait {
     InotifyWait.commandPrefix ++
       recursiveSeq ++
       subscriptionsSeq :+
+      // Use the full path to avoid "./" being given by inotifywait as the watched dir, which will fail Paths.get.
       path.toAbsolutePath.toString
   }
 
