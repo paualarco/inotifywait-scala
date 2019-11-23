@@ -30,9 +30,11 @@ object InotifyWaitFs2 {
     path: Path,
     recursive: Boolean,
     subscriptions: Set[Subscription]
-  )(implicit F: Sync[F],
-    cs: ContextShift[F]
+  )(implicit F: Sync[F]
   ): Stream[F, Events] = {
-    acquire(path, recursive, subscriptions).flatMap(toStream)
+    for {
+      process <- acquire(path, recursive, subscriptions)
+      event <- toStream(process)
+    } yield event
   }
 }
