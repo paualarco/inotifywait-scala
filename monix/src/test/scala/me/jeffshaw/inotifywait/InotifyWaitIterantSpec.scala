@@ -1,9 +1,11 @@
 package me.jeffshaw.inotifywait
 
 import java.nio.file.Files
-import cats.effect.IO
+import monix.eval.Task
+import monix.execution.Scheduler.Implicits.global
 import org.scalatest.{AsyncFunSuite, BeforeAndAfterAll}
-import scala.concurrent.{ExecutionContext, Future}
+import scala.concurrent.ExecutionContext
+import scala.concurrent.duration._
 
 class InotifyWaitIterantSpec extends AsyncFunSuite with BeforeAndAfterAll {
 
@@ -16,16 +18,16 @@ class InotifyWaitIterantSpec extends AsyncFunSuite with BeforeAndAfterAll {
     Files.createDirectories(testDir)
     val tempFile = testDir.resolve("file")
 
-    val resultF = Future(InotifyWaitIterant[IO](testDir, false, Set()).take(4).toListL.unsafeRunSync())
-
-    Thread.sleep(1000L)
-
-    val expectedEvents = InotifyWaitSpec.createEvents(tempFile)
+    val events =
+      Task.parZip2(
+        InotifyWaitIterant.start[Task](testDir, false, Set()).take(4).toListL,
+        Task.delay(InotifyWaitSpec.createEvents(tempFile)).delayExecution(1.second)
+      )
 
     for {
-      result <- resultF
+      (actual, expected) <- events.runToFuture
     } yield {
-      assertResult(expectedEvents)(result)
+      assertResult(expected)(actual)
     }
   }
 

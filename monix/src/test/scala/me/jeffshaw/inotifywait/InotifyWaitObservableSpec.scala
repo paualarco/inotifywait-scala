@@ -1,10 +1,12 @@
 package me.jeffshaw.inotifywait
 
 import java.nio.file.Files
-import org.scalatest.{BeforeAndAfterAll, FunSuite}
+import monix.eval.Task
+import org.scalatest.{BeforeAndAfterAll, AsyncFunSuite}
 import monix.execution.Scheduler.Implicits.global
+import scala.concurrent.duration._
 
-class InotifyWaitObservableSpec extends FunSuite with BeforeAndAfterAll {
+class InotifyWaitObservableSpec extends AsyncFunSuite with BeforeAndAfterAll {
 
   val suiteDir = Files.createTempDirectory("InotifyWaitObservableSpec")
 
@@ -13,22 +15,21 @@ class InotifyWaitObservableSpec extends FunSuite with BeforeAndAfterAll {
     Files.createDirectories(testDir)
     val tempFile = testDir.resolve("file")
 
-    Thread.sleep(2000L)
-
-    var expectedEvents: Seq[Events] = null
-
     val events =
-      for {
-        process <- InotifyWaitObservable.start(testDir, false, Set())
-        () = Thread.sleep(2000L)
-        () = expectedEvents = InotifyWaitSpec.createEvents(tempFile)
-        // We don't get 4 events unless we create > 4 events.
-        _ = InotifyWaitSpec.createEvents(tempFile)
-        events <- InotifyWaitObservable.toEvents(process)
-      } yield events
+      Task.parZip2(
+        InotifyWaitObservable.start(testDir, false, Set()).take(4).toListL,
+        Task.delay {
+          InotifyWaitSpec.createEvents(tempFile)
+          // For some reason we need > 4 events to get `take(4)` to actually get 4 events.
+          InotifyWaitSpec.createEvents(tempFile)
+        }.delayExecution(1.seconds)
+      )
 
-    val actual = events.take(4).toListL.runSyncUnsafe()
-    assertResult(expectedEvents)(actual)
+    for {
+      (actual, expected) <- events.runToFuture
+    } yield {
+      assertResult(expected)(actual)
+    }
   }
 
   override protected def afterAll(): Unit = {
