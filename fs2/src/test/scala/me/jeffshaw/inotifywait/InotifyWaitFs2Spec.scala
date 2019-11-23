@@ -6,14 +6,14 @@ import org.scalatest.{AsyncFunSuite, BeforeAndAfterAll}
 import scala.concurrent.{ExecutionContext, Future}
 
 class InotifyWaitFs2Spec extends AsyncFunSuite with BeforeAndAfterAll {
-  val suiteDir = Files.createTempDirectory("InotifyWaitIterantSpec")
+  val suiteDir = Files.createTempDirectory("InotifyWaitFs2Spec")
 
   override implicit def executionContext: ExecutionContext = {
     scala.concurrent.ExecutionContext.Implicits.global
   }
 
-  test("iterant") {
-    val testDir = suiteDir.resolve("iterant")
+  test("fs2") {
+    val testDir = suiteDir.resolve("fs2")
     Files.createDirectories(testDir)
     val tempFile = testDir.resolve("file")
 
