@@ -7,7 +7,7 @@ import monix.reactive.Observable
 
 object InotifyWaitObservable {
   // factored out for testing
-  def start(
+  def acquire(
     path: Path,
     recursive: Boolean,
     subscriptions: Set[Subscription]
@@ -32,14 +32,14 @@ object InotifyWaitObservable {
     Observable.fromIterator(Task.now(io.Source.fromInputStream(p.getInputStream).getLines().map(Events.valueOf)))
   }
 
-  def apply(
+  def start(
     path: Path,
     recursive: Boolean,
     subscriptions: Set[Subscription]
   )(implicit codec: io.Codec
   ): Observable[Events] = {
     for {
-      process <- start(path, recursive, subscriptions)
+      process <- acquire(path, recursive, subscriptions)
       event <- toEvents(process)
     } yield event
   }
