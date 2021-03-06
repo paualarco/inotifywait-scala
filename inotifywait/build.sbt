@@ -4,17 +4,17 @@ name := "inotifywait"
 
 version := "2.0"
 
-scalaVersion := "2.13.1"
+scalaVersion := "2.13.4"
 
 crossScalaVersions := Seq(
-  "2.12.10",
+  "2.12.13",
   "2.11.12"
 )
 
 def fastParseVersion(scalaVersion: String): String =
   CrossVersion.partialVersion(scalaVersion) match {
     case Some((2,11)) => "2.1.2"
-    case _ => "2.1.3"
+    case _ => "2.3.1"
   }
 
 libraryDependencies ++= Seq(

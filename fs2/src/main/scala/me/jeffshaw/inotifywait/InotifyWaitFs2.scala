@@ -1,6 +1,6 @@
 package me.jeffshaw.inotifywait
 
-import cats.effect.{ContextShift, Sync}
+import cats.effect.Sync
 import fs2._
 import java.nio.file.Path
 
@@ -21,7 +21,6 @@ object InotifyWaitFs2 {
     Stream.bracket(F.delay(InotifyWait.start(path, recursive, subscriptions))){
       i => F.delay {
         i.process.destroy()
-        i.process.waitFor()
       }
     }
   }

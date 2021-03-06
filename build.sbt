@@ -4,7 +4,7 @@ lazy val root = project.in(file(".")).aggregate(inotifywait, fs2)
 lazy val inotifywait = project.in(file("inotifywait"))
 
 lazy val fs2 = project.in(file("fs2"))
-  .dependsOn(inotifywait)
+  .dependsOn(inotifywait % "compile->compile;test->test")
 
 lazy val monix = project.in(file("monix"))
-  .dependsOn(inotifywait)
+  .dependsOn(inotifywait % "compile->compile;test->test")

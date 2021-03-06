@@ -3,13 +3,10 @@ package me.jeffshaw.inotifywait
 import java.nio.file.Files
 import monix.eval.Task
 import monix.execution.Scheduler.Implicits.global
-import org.scalatest.{AsyncFunSuite, BeforeAndAfterAll}
-import scala.concurrent.ExecutionContext
+import org.scalatest.{FunSuite, BeforeAndAfterAll}
 import scala.concurrent.duration._
 
-class InotifyWaitIterantSpec extends AsyncFunSuite with BeforeAndAfterAll {
-
-  override implicit def executionContext: ExecutionContext = ExecutionContext.global
+class InotifyWaitIterantSpec extends FunSuite with BeforeAndAfterAll {
 
   val suiteDir = Files.createTempDirectory("InotifyWaitIterantSpec")
 
@@ -18,17 +15,12 @@ class InotifyWaitIterantSpec extends AsyncFunSuite with BeforeAndAfterAll {
     Files.createDirectories(testDir)
     val tempFile = testDir.resolve("file")
 
-    val events =
-      Task.parZip2(
-        InotifyWaitIterant.start[Task](testDir, false, Set()).take(4).toListL,
-        Task.delay(InotifyWaitSpec.createEvents(tempFile)).delayExecution(1.second)
-      )
-
-    for {
-      (actual, expected) <- events.runToFuture
-    } yield {
-      assertResult(expected)(actual)
-    }
+    Task.parMap2(
+      InotifyWaitIterant.start[Task](testDir, false, Set()).take(4).toListL,
+      Task.delay(InotifyWaitSpec.createEvents(tempFile)).delayExecution(1.second)
+    ) { (actual, expected) =>
+        assertResult(expected)(actual)
+    }.runSyncUnsafe()
   }
 
   override protected def afterAll(): Unit = {

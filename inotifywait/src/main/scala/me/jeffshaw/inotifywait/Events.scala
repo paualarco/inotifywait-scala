@@ -21,8 +21,10 @@ object Events {
           }
         }.toSet
         Events(events, Paths.get(watchedFile, eventFile))
+      case Success(values, _) =>
+        throw new InotifyWaitException(s"event parsing failed for $line. Expected 3 values but got ${values.size}.")
       case f: Failure =>
-        throw new RuntimeException("event parsing failed for " + line + " at index " + f.index)
+        throw new InotifyWaitException(s"event parsing failed for $line at index ${f.index}")
     }
   }
 }

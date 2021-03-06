@@ -14,10 +14,7 @@ object InotifyWaitIterant {
   ): Iterant[F, Process] = {
     Iterant.resource(
       F.delay(new ProcessBuilder(InotifyWait.command(path, recursive, subscriptions): _*).start())
-    )(process => F.delay {
-      process.destroy()
-      process.waitFor()
-    })
+    )(process => F.delay(process.destroy()))
   }
 
   def toEvents[F[_]](process: Process)(implicit F: Sync[F]): Iterant[F, Events] = {
