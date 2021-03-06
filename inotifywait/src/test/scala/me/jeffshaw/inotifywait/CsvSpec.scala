@@ -2,7 +2,7 @@ package me.jeffshaw.inotifywait
 
 import fastparse._
 import org.scalactic.source.Position
-import org.scalatest.FunSuite
+import org.scalatest.{Assertion, FunSuite}
 
 class CsvSpec extends FunSuite {
 
@@ -10,7 +10,7 @@ class CsvSpec extends FunSuite {
     name: String,
     input: String,
     parser: P[_] => P[A],
-    assertion: Parsed[A] => Any
+    assertion: Parsed[A] => Assertion
   )(implicit pos: Position
   ): Unit = {
     test(name) {
@@ -21,7 +21,7 @@ class CsvSpec extends FunSuite {
 
   testParser("quotedField", "\"hi\"", Csv.quotedField(_), assertResult(Parsed.Success("hi", 4)))
   testParser("quotedField with double quotes", "\"h\"\"i\"", Csv.quotedField(_), assertResult(Parsed.Success("h\"i", 6)))
-  testParser("quotedField with single quote", "\"h\"i\"", Csv.onlyQuotedField(_), (result: Parsed[String]) => result.isInstanceOf[Parsed.Failure])
+  testParser("quotedField with single quote", "\"h\"i\"", Csv.onlyQuotedField(_), (result: Parsed[String]) => assert(result.isInstanceOf[Parsed.Failure]))
   testParser("csv one field", "hi", Csv.csv(_), assertResult(Parsed.Success(Seq("hi"), 2)))
   testParser("csv one quoted field", "\"hi\"", Csv.csv(_), assertResult(Parsed.Success(Seq("hi"), 4)))
   testParser("csv1", """hi""", Csv.csv(_), assertResult(Parsed.Success(Seq("hi"), 2)))
@@ -30,6 +30,6 @@ class CsvSpec extends FunSuite {
   testParser("csv4", """hi,"there",",","you""are"""", Csv.csv(_), assertResult(Parsed.Success(Seq("hi", "there", ",", "you\"are"), 25)))
   testParser("csv5", """hi,"there",",","you""are",good""", Csv.csv(_), assertResult(Parsed.Success(Seq("hi", "there", ",", "you\"are", "good"), 30)))
   testParser("./,\"CLOSE_WRITE,CLOSE\",\"\"\"hi\"", "./,\"CLOSE_WRITE,CLOSE\",\"\"\"hi\"", Csv.csv(_), assertResult(Parsed.Success(Seq("./", "CLOSE_WRITE,CLOSE", "\"hi"), 29)))
-  testParser("watching directory", "/,IS_DIR,", Csv.csv(_), assertResult(Parsed.Success(Seq("/", "ISDIR", ""), 9)))
+  testParser("watching directory", "/,IS_DIR,", Csv.csv(_), assertResult(Parsed.Success(Seq("/", "IS_DIR", ""), 9)))
 
 }
